@@ -1,4 +1,4 @@
-module github.com/jinwuzhao/bilidanmu
+module github.com/JinWuZhao/bilidanmu
 
 go 1.18
 

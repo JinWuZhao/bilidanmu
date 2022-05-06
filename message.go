@@ -1,4 +1,4 @@
-package main
+package bilidanmu
 
 type Message interface {
 	Decode([]byte)
