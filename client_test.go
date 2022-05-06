@@ -31,5 +31,5 @@ func TestClient(t *testing.T) {
 		t.Error("c.Start() error:", err)
 		return
 	}
-	<-ctx.Done()
+	_ = c.WaitForStop()
 }

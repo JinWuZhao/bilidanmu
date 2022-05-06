@@ -27,6 +27,7 @@ type Client struct {
 	Request   *RequestInfo `json:"request"`
 	conn      *websocket.Conn
 	Connected bool `json:"connected"`
+	stop      chan error
 }
 
 type RoomInfo struct {
@@ -79,6 +80,7 @@ func NewClient(roomId uint32) (*Client, error) {
 		Request:   request,
 		conn:      nil,
 		Connected: false,
+		stop:      make(chan error, 1),
 	}, nil
 }
 
@@ -140,7 +142,7 @@ func (c *Client) SendPackage(ctx context.Context, packetLen uint32, magic uint16
 }
 
 func (c *Client) ReceiveMsg(ctx context.Context, receiver func(Message)) {
-	for ctx.Err() == nil {
+	for {
 		_, msg, err := c.conn.Read(ctx)
 		if err != nil {
 			log.Println("ReceiveMsg(): c.conn.Read() error:", err)
@@ -190,11 +192,17 @@ func (c *Client) ReceiveMsg(ctx context.Context, receiver func(Message)) {
 				}
 			}
 		}
+
+		select {
+		case <-ctx.Done():
+			c.stop <- nil
+		default:
+		}
 	}
 }
 
 func (c *Client) HeartBeat(ctx context.Context) {
-	for ctx.Err() == nil {
+	for {
 		if c.Connected {
 			obj := []byte("5b6f626a656374204f626a6563745d")
 			err := c.SendPackage(ctx, 0, 16, 1, 2, 1, obj)
@@ -205,5 +213,18 @@ func (c *Client) HeartBeat(ctx context.Context) {
 			}
 			time.Sleep(30 * time.Second)
 		}
+		select {
+		case <-ctx.Done():
+			c.stop <- nil
+		default:
+		}
 	}
+}
+
+func (c *Client) WaitForStop() error {
+	err := <-c.stop
+	if err != nil {
+		return fmt.Errorf("client stopped with error: %w", err)
+	}
+	return nil
 }
