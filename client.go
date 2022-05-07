@@ -142,7 +142,15 @@ func (c *Client) SendPackage(ctx context.Context, packetLen uint32, magic uint16
 }
 
 func (c *Client) ReceiveMsg(ctx context.Context, receiver func(Message)) {
+loop:
 	for {
+		select {
+		case <-ctx.Done():
+			c.stop <- nil
+			break loop
+		default:
+		}
+
 		_, msg, err := c.conn.Read(ctx)
 		if err != nil {
 			log.Println("ReceiveMsg(): c.conn.Read() error:", err)
@@ -192,17 +200,19 @@ func (c *Client) ReceiveMsg(ctx context.Context, receiver func(Message)) {
 				}
 			}
 		}
-
-		select {
-		case <-ctx.Done():
-			c.stop <- nil
-		default:
-		}
 	}
 }
 
 func (c *Client) HeartBeat(ctx context.Context) {
+loop:
 	for {
+		select {
+		case <-ctx.Done():
+			c.stop <- nil
+			break loop
+		default:
+		}
+
 		if c.Connected {
 			obj := []byte("5b6f626a656374204f626a6563745d")
 			err := c.SendPackage(ctx, 0, 16, 1, 2, 1, obj)
@@ -212,11 +222,6 @@ func (c *Client) HeartBeat(ctx context.Context) {
 				continue
 			}
 			time.Sleep(30 * time.Second)
-		}
-		select {
-		case <-ctx.Done():
-			c.stop <- nil
-		default:
 		}
 	}
 }
