@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	RealID      = "http://api.live.bilibili.com/room/v1/Room/room_init" // params: id=xxx
-	DanMuServer = "hw-bj-live-comet-06.chat.bilibili.com:443"
-	keyUrl      = "https://api.live.bilibili.com/room/v1/Danmu/getConf"                 // params: room_id=xxx&platform=pc&player=web
-	roomInfoUrl = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom" // params: room_id=xxx
+	RealID       = "http://api.live.bilibili.com/room/v1/Room/room_init"                 // params: id=xxx
+	dammuInfoUrl = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo"  // params: type=0&id=xxx
+	keyUrl       = "https://api.live.bilibili.com/room/v1/Danmu/getConf"                 // params: room_id=xxx&platform=pc&player=web
+	roomInfoUrl  = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom" // params: room_id=xxx
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -85,7 +85,11 @@ func NewClient(roomId uint32) (*Client, error) {
 }
 
 func (c *Client) Start(ctx context.Context, receiver func(Message)) error {
-	u := url.URL{Scheme: "wss", Host: DanMuServer, Path: "/sub"}
+	host, err := GetDanmuHost(c.Room.RoomId)
+	if err != nil {
+		return fmt.Errorf("GetDanmuHost() error: %w", err)
+	}
+	u := url.URL{Scheme: "wss", Host: host, Path: "/sub"}
 	conn, _, err := websocket.Dial(ctx, u.String(), nil)
 	if err != nil {
 		return fmt.Errorf("websocket.Dial() error: %w", err)
@@ -93,7 +97,7 @@ func (c *Client) Start(ctx context.Context, receiver func(Message)) error {
 	c.conn = conn
 
 	log.Println("当前直播间状态：", c.Room.LiveStatus)
-	log.Println("连接弹幕服务器 ", DanMuServer, " 成功，正在发送握手包...")
+	log.Println("连接弹幕服务器 ", host, " 成功，正在发送握手包...")
 
 	r, err := json.Marshal(c.Request)
 	if err != nil {

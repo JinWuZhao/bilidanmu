@@ -48,6 +48,28 @@ func GetToken(roomId uint32) (string, error) {
 	return json.Get(rawData, "data").Get("token").ToString(), nil
 }
 
+func GetDanmuHost(roomId uint32) (string, error) {
+	url := fmt.Sprintf("%s?type=0&id=%d", dammuInfoUrl, roomId)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("http.Get() error: %w", err)
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	rawData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("io.ReadAll error: %w", err)
+	}
+	hosts := json.Get(rawData, "data").Get("host_list")
+	if hosts.Size() <= 0 {
+		return "", fmt.Errorf("host not found")
+	}
+	firstHost := hosts.Get(0)
+	return fmt.Sprintf("%s:%d", firstHost.Get("host").ToString(), firstHost.Get("wss_port").ToInt()), nil
+}
+
 func GetRoomInfo(roomId uint32) (*RoomInfo, error) {
 	url := fmt.Sprintf("%s?room_id=%d", roomInfoUrl, roomId)
 
