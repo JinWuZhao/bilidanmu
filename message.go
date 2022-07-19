@@ -38,15 +38,16 @@ func (d *DanMuMsg) Decode(src []byte) {
 }
 
 type Gift struct {
-	UUname   string `json:"u_uname"`
+	Uname    string `json:"uname"`
 	Action   string `json:"action"`
+	Number   uint32 `json:"number"`
 	Price    uint32 `json:"price"`
 	GiftName string `json:"gift_name"`
 }
 
 func NewGift() *Gift {
 	return &Gift{
-		UUname:   "",
+		Uname:    "",
 		Action:   "",
 		Price:    0,
 		GiftName: "",
@@ -54,10 +55,10 @@ func NewGift() *Gift {
 }
 
 func (g *Gift) Decode(src []byte) {
-	g.UUname = json.Get(src, "data", "uname").ToString()
+	g.Uname = json.Get(src, "data", "uname").ToString()
 	g.Action = json.Get(src, "data", "action").ToString()
-	nums := json.Get(src, "data", "num").ToUint32()
-	g.Price = json.Get(src, "data", "price").ToUint32() * nums
+	g.Number = json.Get(src, "data", "num").ToUint32()
+	g.Price = json.Get(src, "data", "price").ToUint32()
 	g.GiftName = json.Get(src, "data", "giftName").ToString()
 }
 

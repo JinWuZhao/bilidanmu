@@ -7,7 +7,7 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	c, err := NewClient(5050)
+	c, err := NewClient(1948915)
 	if err != nil {
 		t.Error("models.NewClient() error:", err)
 		return
@@ -18,7 +18,7 @@ func TestClient(t *testing.T) {
 		case *DanMuMsg:
 			log.Printf("%d-%s | %d-%s: %s\n", m.MedalLevel, m.MedalName, m.ULevel, m.Uname, m.Text)
 		case *Gift:
-			log.Printf("%s %s 价值 %d 的 %s\n", m.UUname, m.Action, m.Price, m.GiftName)
+			log.Printf("%s %s 价值 %d 的 %s X%d\n", m.Uname, m.Action, m.Price, m.GiftName, m.Number)
 		case *WelcomeVip:
 			log.Printf("欢迎VIP %s 进入直播间\n", m.UserName)
 		case *WelcomeGuard:
